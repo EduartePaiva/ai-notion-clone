@@ -20,7 +20,7 @@
             "error",
             {
                 // all folders within src (except __tests__)should be named in kebab-case
-                "src/**": "KEBAB_CASE"
+                "src/**": "NEXT_JS_APP_ROUTER_CASE"
             }
         ]
     }
