@@ -8,6 +8,8 @@ import {
     useUser,
 } from "@clerk/nextjs";
 
+import Breadcrumbs from "./breadcrumbs";
+
 export default function Header() {
     const { user, isSignedIn, isLoaded } = useUser();
     return (
@@ -19,6 +21,7 @@ export default function Header() {
             )}
 
             {/* breadcrumbs */}
+            <Breadcrumbs />
             <div>
                 <SignedOut>
                     <SignInButton />
