@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbopack",
+        "dev": "next dev --turbo",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
@@ -23,10 +23,11 @@
         "clsx": "^2.1.1",
         "firebase": "^11.0.1",
         "firebase-admin": "^12.7.0",
+        "framer-motion": "^11.11.17",
         "lucide-react": "^0.454.0",
-        "next": "15.0.3",
-        "react": "19.0.0-rc-66855b96-20241106",
-        "react-dom": "19.0.0-rc-66855b96-20241106",
+        "next": "14.2.18",
+        "react": "^18",
+        "react-dom": "^18",
         "react-firebase-hooks": "^5.1.1",
         "server-only": "^0.0.1",
         "tailwind-merge": "^2.5.4",
@@ -36,10 +37,10 @@
     "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "^4.3.0",
         "@types/node": "^20",
-        "@types/react": "npm:types-react@rc",
-        "@types/react-dom": "npm:types-react-dom@rc",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
         "eslint": "^8",
-        "eslint-config-next": "15.0.3",
+        "eslint-config-next": "14.2.18",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-check-file": "^2.8.0",
         "postcss": "^8",
@@ -47,9 +48,5 @@
         "prettier-plugin-tailwindcss": "^0.6.8",
         "tailwindcss": "^3.4.1",
         "typescript": "^5"
-    },
-    "overrides": {
-        "@types/react": "npm:types-react@rc",
-        "@types/react-dom": "npm:types-react-dom@rc"
     }
 }
