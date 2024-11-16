@@ -4,4 +4,4 @@
 [_] - Migrate from clerk to lucia, this will be a interesting one
 
 
-stopped at: 2:34
+stopped at: 2:46
