@@ -16,7 +16,7 @@ type DocumentProps = {
 };
 
 export default function Document({ id }: DocumentProps) {
-    const [data, loading, error] = useDocumentData(doc(db, "documents", id));
+    const [data] = useDocumentData(doc(db, "documents", id));
     const [input, setInput] = useState("");
     const [isUpdating, startTransition] = useTransition();
 
@@ -38,7 +38,7 @@ export default function Document({ id }: DocumentProps) {
         }
     };
     return (
-        <div>
+        <div className="h-full flex-1 bg-white p-5">
             <div className="mx-auto flex max-w-6xl justify-between pb-5">
                 <form className="flex flex-1 space-x-2" onSubmit={updateTitle}>
                     {/* update title... */}
