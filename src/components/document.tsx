@@ -8,6 +8,7 @@ import { useDocumentData } from "react-firebase-hooks/firestore";
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebase";
 
+import Editor from "./editor";
 import { Button } from "./ui/button";
 
 type DocumentProps = {
@@ -58,7 +59,8 @@ export default function Document({ id }: DocumentProps) {
 
                 {/* Avatars */}
             </div>
-            {id}
+            <hr className="pb-10" />
+            <Editor />
             {/* Collaborative Editor */}
         </div>
     );
