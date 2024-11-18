@@ -7,7 +7,9 @@ import { useDocumentData } from "react-firebase-hooks/firestore";
 
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebase";
+import useOwner from "@/lib/use-owner";
 
+import DeleteDocument from "./delete-document";
 import Editor from "./editor";
 import { Button } from "./ui/button";
 
@@ -19,6 +21,7 @@ export default function Document({ id }: DocumentProps) {
     const [data] = useDocumentData(doc(db, "documents", id));
     const [input, setInput] = useState("");
     const [isUpdating, startTransition] = useTransition();
+    const isOwner = useOwner();
 
     useEffect(() => {
         if (data) {
@@ -51,6 +54,15 @@ export default function Document({ id }: DocumentProps) {
                     <Button disabled={isUpdating} type="submit">
                         {isUpdating ? "Updating..." : "Update"}
                     </Button>
+
+                    {/* If */}
+                    {isOwner && (
+                        <>
+                            {/* Invite User */}
+                            {/* Delete document */}
+                            <DeleteDocument />
+                        </>
+                    )}
                 </form>
             </div>
 
