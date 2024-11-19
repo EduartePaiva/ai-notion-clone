@@ -5,4 +5,4 @@
 [_] - setup my own liveblocks? using yjs+lexical and wss, this will be super hard
 
 
-stopped at: 3:13
+stopped at: 3:19

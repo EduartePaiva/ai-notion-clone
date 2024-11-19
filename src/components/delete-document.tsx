@@ -1,8 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { toast } from "sonner";
+
+import { deleteDocumentAction } from "@/actions/actions";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -19,8 +22,24 @@ export default function DeleteDocument() {
     const [open, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const pathname = usePathname();
+    const router = useRouter();
 
-    const handleDelete = async () => {};
+    const handleDelete = async () => {
+        const roomId = pathname.split("/").pop();
+        if (!roomId) return;
+
+        startTransition(async () => {
+            const { success } = await deleteDocumentAction(roomId);
+
+            if (success) {
+                setIsOpen(false);
+                router.replace("/");
+                toast.success("Room deleted successfully!");
+            } else {
+                toast.error("Failed to delete the room!");
+            }
+        });
+    };
     return (
         <AlertDialog open={open} onOpenChange={setIsOpen}>
             <Button asChild variant={"destructive"}>
@@ -41,6 +60,7 @@ export default function DeleteDocument() {
                         type="button"
                         variant={"destructive"}
                         disabled={isPending}
+                        onClick={handleDelete}
                     >
                         {isPending ? "Deleting..." : "Delete"}
                     </Button>
