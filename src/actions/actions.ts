@@ -60,3 +60,35 @@ export async function deleteDocumentAction(roomId: string): Promise<{
         return { success: false };
     }
 }
+
+export async function inviteUserToDocumentAction({
+    roomId,
+    userEmail,
+}: {
+    roomId: string;
+    userEmail: string;
+}): Promise<{
+    success: boolean;
+}> {
+    await auth.protect();
+    console.log(`inviteUser: ${userEmail}`);
+
+    try {
+        await adminDb
+            .collection("users")
+            .doc(userEmail)
+            .collection("rooms")
+            .doc(roomId)
+            .set({
+                userId: userEmail,
+                role: "editor",
+                createdAt: new Date(),
+                roomId,
+            });
+
+        return { success: true };
+    } catch (err) {
+        console.error(err);
+        return { success: false };
+    }
+}

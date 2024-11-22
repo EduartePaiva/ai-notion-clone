@@ -11,6 +11,7 @@ import useOwner from "@/lib/use-owner";
 
 import DeleteDocument from "./delete-document";
 import Editor from "./editor";
+import InviteUser from "./invite-user";
 import { Button } from "./ui/button";
 
 type DocumentProps = {
@@ -59,6 +60,7 @@ export default function Document({ id }: DocumentProps) {
                     {isOwner && (
                         <>
                             {/* Invite User */}
+                            <InviteUser />
                             {/* Delete document */}
                             <DeleteDocument />
                         </>
