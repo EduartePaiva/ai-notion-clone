@@ -12,6 +12,7 @@ import useOwner from "@/lib/use-owner";
 import DeleteDocument from "./delete-document";
 import Editor from "./editor";
 import InviteUser from "./invite-user";
+import ManageUsers from "./manage-users";
 import { Button } from "./ui/button";
 
 type DocumentProps = {
@@ -68,9 +69,9 @@ export default function Document({ id }: DocumentProps) {
                 </form>
             </div>
 
-            <div>
+            <div className="max-w6xl mx-auto mb-5 flex items-center justify-between">
                 {/* ManageUsers */}
-
+                <ManageUsers />
                 {/* Avatars */}
             </div>
             <hr className="pb-10" />

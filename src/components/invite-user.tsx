@@ -7,14 +7,14 @@ import { toast } from "sonner";
 
 import { inviteUserToDocumentAction } from "@/actions/actions";
 import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -44,19 +44,17 @@ export default function InviteUser() {
         });
     };
     return (
-        <AlertDialog open={open} onOpenChange={setIsOpen}>
+        <Dialog open={open} onOpenChange={setIsOpen}>
             <Button asChild variant={"outline"}>
-                <AlertDialogTrigger>Invite</AlertDialogTrigger>
+                <DialogTrigger>Invite</DialogTrigger>
             </Button>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>
-                        Invite a User to collaborate!
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Invite a User to collaborate!</DialogTitle>
+                    <DialogDescription>
                         Enter the email of the user you want to invite.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
+                    </DialogDescription>
+                </DialogHeader>
                 <Input
                     type="email"
                     placeholder="Email"
@@ -64,7 +62,7 @@ export default function InviteUser() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
-                <AlertDialogFooter>
+                <DialogFooter>
                     <Button
                         type="button"
                         variant={"default"}
@@ -79,8 +77,8 @@ export default function InviteUser() {
                     >
                         Close
                     </Button>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

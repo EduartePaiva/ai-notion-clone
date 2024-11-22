@@ -92,3 +92,21 @@ export async function inviteUserToDocumentAction({
         return { success: false };
     }
 }
+
+export async function removeUserFromDocumentAction({
+    roomId,
+    userEmail,
+}: {
+    roomId: string;
+    userId: string;
+}): Promise<{
+    success: boolean;
+}> {
+    console.log("removeUserFromDocument", roomId, userEmail);
+    try {
+        return { success: true };
+    } catch (err) {
+        console.error(err);
+        return { success: false };
+    }
+}
