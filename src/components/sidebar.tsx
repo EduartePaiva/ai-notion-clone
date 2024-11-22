@@ -97,22 +97,22 @@ export default function Sidebar() {
                         ))}
                     </>
                 )}
+                {/* Shared with me */}
+                {groupedData.editor.length === 0 && (
+                    <>
+                        <h2 className="text-sm font-semibold text-gray-500">
+                            Shared with Me
+                        </h2>
+                        {groupedData.editor.map((doc) => (
+                            <SidebarOptions
+                                key={doc.id}
+                                id={doc.id}
+                                href={`/doc/${doc.id}`}
+                            />
+                        ))}
+                    </>
+                )}
             </div>
-            {/* Shared with me */}
-            {groupedData.editor.length === 0 && (
-                <>
-                    <h2 className="text-sm font-semibold text-gray-500">
-                        Shared with Me
-                    </h2>
-                    {groupedData.editor.map((doc) => (
-                        <SidebarOptions
-                            key={doc.id}
-                            id={doc.id}
-                            href={`/doc/${doc.id}`}
-                        />
-                    ))}
-                </>
-            )}
             {/* List... */}
         </>
     );
