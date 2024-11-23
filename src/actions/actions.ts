@@ -95,15 +95,23 @@ export async function inviteUserToDocumentAction({
 
 export async function removeUserFromDocumentAction({
     roomId,
-    userEmail,
+    userId,
 }: {
     roomId: string;
     userId: string;
 }): Promise<{
     success: boolean;
 }> {
-    console.log("removeUserFromDocument", roomId, userEmail);
+    await auth.protect();
+    console.log("removeUserFromDocument", roomId, userId);
     try {
+        await adminDb
+            .collection("users")
+            .doc(userId)
+            .collection("rooms")
+            .doc(roomId)
+            .delete();
+
         return { success: true };
     } catch (err) {
         console.error(err);

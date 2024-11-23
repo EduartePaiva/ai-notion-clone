@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { db } from "@/firebase";
 import useOwner from "@/lib/use-owner";
 
+import Avatars from "./avatars";
 import DeleteDocument from "./delete-document";
 import Editor from "./editor";
 import InviteUser from "./invite-user";
@@ -72,7 +73,7 @@ export default function Document({ id }: DocumentProps) {
             <div className="max-w6xl mx-auto mb-5 flex items-center justify-between">
                 {/* ManageUsers */}
                 <ManageUsers />
-                {/* Avatars */}
+                <Avatars />
             </div>
             <hr className="pb-10" />
             <Editor />
