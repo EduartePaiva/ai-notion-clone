@@ -44,7 +44,7 @@ export default function Sidebar() {
         owner: [],
     });
 
-    const [data, loading, error] = useCollection<RoomDocument>(
+    const [data] = useCollection<RoomDocument>(
         user &&
             query<RoomDocument, DocumentData>(
                 collectionGroup(db, "rooms") as Query<
@@ -65,12 +65,13 @@ export default function Sidebar() {
                     prev.owner.push({ id: current.id, ...roomData });
                 }
                 if (roomData.role == "editor") {
-                    prev.owner.push({ id: current.id, ...roomData });
+                    prev.editor.push({ id: current.id, ...roomData });
                 }
                 return prev;
             },
             { owner: [], editor: [] }
         );
+        console.log(grouped);
         setGroupedData(grouped);
     }, [data]);
 
@@ -98,7 +99,7 @@ export default function Sidebar() {
                     </>
                 )}
                 {/* Shared with me */}
-                {groupedData.editor.length === 0 && (
+                {groupedData.editor.length !== 0 && (
                     <>
                         <h2 className="text-sm font-semibold text-gray-500">
                             Shared with Me

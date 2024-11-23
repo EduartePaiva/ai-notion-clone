@@ -41,7 +41,7 @@ export default function ManageUsers() {
 
             const { success } = await removeUserFromDocumentAction({
                 roomId: room.id,
-                userId,
+                userId: userId,
             });
 
             if (success) {
