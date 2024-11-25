@@ -15,79 +15,79 @@ import * as Y from "yjs";
 import { Button } from "@/components/ui/button";
 import { stringToColor } from "@/lib/string-to-color";
 
+import TranslateDocument from "./translate-document";
+
 type EditorProps = {
-    doc: Y.Doc;
-    provider: LiveblocksYjsProvider;
-    darkMode: boolean;
+  doc: Y.Doc;
+  provider: LiveblocksYjsProvider;
+  darkMode: boolean;
 };
 
 function BlockNote({ darkMode, doc, provider }: EditorProps) {
-    const userInfo = useSelf((me) => me.info);
+  const userInfo = useSelf((me) => me.info);
 
-    const editor: BlockNoteEditor = useCreateBlockNote({
-        collaboration: {
-            provider,
-            fragment: doc.getXmlFragment("document-store"),
-            user: {
-                name: userInfo.name,
-                color: stringToColor(userInfo.email),
-            },
-        },
-    });
+  const editor: BlockNoteEditor = useCreateBlockNote({
+    collaboration: {
+      provider,
+      fragment: doc.getXmlFragment("document-store"),
+      user: {
+        name: userInfo.name,
+        color: stringToColor(userInfo.email),
+      },
+    },
+  });
 
-    return (
-        <div className="relative mx-auto max-w-6xl">
-            <BlockNoteView
-                className="min-h-screen"
-                editor={editor}
-                theme={darkMode ? "dark" : "light"}
-            />
-        </div>
-    );
+  return (
+    <div className="relative mx-auto max-w-6xl">
+      <BlockNoteView
+        className="min-h-screen"
+        editor={editor}
+        theme={darkMode ? "dark" : "light"}
+      />
+    </div>
+  );
 }
 
 export default function Editor() {
-    const room = useRoom();
-    const [doc, setDoc] = useState<Y.Doc>();
-    const [provider, setProvider] = useState<LiveblocksYjsProvider>();
-    const [darkMode, setDarkMode] = useState(false);
+  const room = useRoom();
+  const [doc, setDoc] = useState<Y.Doc>();
+  const [provider, setProvider] = useState<LiveblocksYjsProvider>();
+  const [darkMode, setDarkMode] = useState(false);
 
-    useEffect(() => {
-        const yDoc = new Y.Doc();
-        const yProvider = new LiveblocksYjsProvider(room, yDoc);
-        setDoc(yDoc);
-        setProvider(yProvider);
+  useEffect(() => {
+    const yDoc = new Y.Doc();
+    const yProvider = new LiveblocksYjsProvider(room, yDoc);
+    setDoc(yDoc);
+    setProvider(yProvider);
 
-        return () => {
-            yDoc.destroy();
-            yProvider.destroy();
-        };
-    }, [room]);
+    return () => {
+      yDoc.destroy();
+      yProvider.destroy();
+    };
+  }, [room]);
 
-    if (!doc || !provider) {
-        return null;
-    }
-    const style = `hover:text-gray-700 ${
-        darkMode
-            ? "text-gray-300 bg-gray-700 hover:bg-gray-100 "
-            : "text-gray-700 bg-gray-200 hover:bg-gray-300 "
-    }`;
-    return (
-        <div className="mx-auto max-w-6xl">
-            <div className="mb-10 flex items-center justify-end gap-2">
-                {/* Translate Document AI*/}
-                {/* Chat To Document AI */}
+  if (!doc || !provider) {
+    return null;
+  }
+  const style = `hover:text-gray-700 ${
+    darkMode
+      ? "text-gray-300 bg-gray-700 hover:bg-gray-100 "
+      : "text-gray-700 bg-gray-200 hover:bg-gray-300 "
+  }`;
+  return (
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-10 flex items-center justify-end gap-2">
+        {/* Translate Document AI*/}
+        <TranslateDocument doc={doc} />
+        {/* Chat To Document AI */}
 
-                {/* Dark Mode */}
-                <Button
-                    className={style}
-                    onClick={() => setDarkMode((prev) => !prev)}
-                >
-                    {darkMode ? <SunIcon /> : <MoonIcon />}
-                </Button>
-            </div>
-            {/* Block Note */}
-            <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
-        </div>
-    );
+        {/* Dark Mode */}
+        <Button className={style} onClick={() => setDarkMode((prev) => !prev)}>
+          {darkMode ? <SunIcon /> : <MoonIcon />}
+        </Button>
+      </div>
+      {/* Block Note */}
+      <BlockNote doc={doc} provider={provider} darkMode={darkMode} />
+    </div>
+  );
 }
