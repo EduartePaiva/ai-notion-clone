@@ -17,6 +17,8 @@ import { stringToColor } from "@/lib/string-to-color";
 
 import TranslateDocument from "./translate-document";
 
+export type YJSDoc = typeof Y.Doc;
+
 type EditorProps = {
   doc: Y.Doc;
   provider: LiveblocksYjsProvider;
