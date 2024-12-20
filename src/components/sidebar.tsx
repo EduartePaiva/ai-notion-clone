@@ -54,9 +54,9 @@ export default function Sidebar() {
                 where("userId", "==", user.emailAddresses[0].toString())
             )
     );
-
     useEffect(() => {
         if (!data) return;
+        console.log(data);
 
         const grouped = data.docs.reduce<GroupedData>(
             (prev, current) => {
