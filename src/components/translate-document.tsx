@@ -14,6 +14,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { env } from "@/env/client";
 
 import { YJSDoc } from "./editor";
 import {
@@ -45,7 +46,7 @@ export default function TranslateDocument({ doc }: TranslateDocumentProps) {
     const [open, setIsOpen] = useState(false);
     const [language, setLanguage] = useState("");
     const [summary, setSummary] = useState("");
-    const [question, setQuestion] = useState("");
+    const [question] = useState("");
     const [isPending, startTransition] = useTransition();
 
     const handleAskQuestion = () => {
@@ -53,7 +54,7 @@ export default function TranslateDocument({ doc }: TranslateDocumentProps) {
             const documentData = doc.get("document-store").toJSON();
 
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/translateDocument`,
+                `${env.NEXT_PUBLIC_BASE_URL}/translateDocument`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

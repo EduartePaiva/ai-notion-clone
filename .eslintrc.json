@@ -1,7 +1,8 @@
 {
     "extends": ["next/core-web-vitals", "next/typescript", "prettier"],
-    "plugins": ["check-file"],
+    "plugins": ["check-file", "n"],
     "rules": {
+        "n/no-process-env": ["error"],
         "prefer-arrow-callback": "error",
         "prefer-template": "error",
         "semi": "error",

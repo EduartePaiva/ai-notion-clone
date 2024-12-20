@@ -14,7 +14,7 @@ type SidebarOptionsType = {
 };
 
 export default function SidebarOptions({ href, id }: SidebarOptionsType) {
-    const [data, loading, error] = useDocumentData(doc(db, "documents", id));
+    const [data] = useDocumentData(doc(db, "documents", id));
     const pathName = usePathname();
     const isActive = href.includes(pathName) && pathName !== "/";
 
