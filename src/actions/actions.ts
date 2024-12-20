@@ -17,6 +17,7 @@ export async function createNewDocumentAction() {
     const docRef = await docCollectionRef.add({
         title: "New Doc",
     });
+
     await adminDb
         .collection("users")
         .doc(sessionClaims.email)

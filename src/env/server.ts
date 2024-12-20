@@ -20,6 +20,7 @@ export const env = createEnv({
             .transform((s) => s === "true")
             .optional(),
         LIVEBLOCKS_PRIVATE_KEY: z.string(),
+        CLERK_SECRET_KEY: z.string(),
     },
     onValidationError: (error: ZodError) => {
         console.error(
