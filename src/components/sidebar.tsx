@@ -12,9 +12,15 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
+import { SplitUsersToDocument } from "@/db/schema/users-to-documents";
 
 import NewDocumentButton from "./new-document-button";
 import SidebarOptions from "./sidebar-options";
+
+interface GroupedData {
+    editor: SplitUsersToDocument<"editor">[];
+    owner: SplitUsersToDocument<"owner">[];
+}
 
 export default function Sidebar() {
     const { user } = useUser();

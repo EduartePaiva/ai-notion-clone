@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { InferSelectModel, relations } from "drizzle-orm";
 import {
     foreignKey,
     pgEnum,
@@ -24,7 +24,7 @@ const usersToDocuments = pgTable(
             .references(() => usersTable.id),
         documentId: uuid().notNull(),
         role: roomRoleEnum().notNull(),
-        createdAt: timestamp().defaultNow(),
+        createdAt: timestamp().defaultNow().notNull(),
     },
     (t) => [
         primaryKey({ columns: [t.userId, t.documentId] }),
@@ -49,5 +49,12 @@ export const usersToDocumentsRelations = relations(
         }),
     })
 );
+
+export type UsersToDocument = InferSelectModel<typeof usersToDocuments>;
+
+export interface SplitUsersToDocument<T extends UsersToDocument["role"]>
+    extends UsersToDocument {
+    role: T;
+}
 
 export default usersToDocuments;
