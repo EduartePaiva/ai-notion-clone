@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useUser } from "@clerk/nextjs";
-import {
-    type DocumentData,
-    type Query,
-    collectionGroup,
-    query,
-    where,
-} from "firebase/firestore";
 import { MenuIcon } from "lucide-react";
-import { useCollection } from "react-firebase-hooks/firestore";
 
 import {
     Sheet,
@@ -20,22 +12,9 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { db } from "@/firebase";
 
 import NewDocumentButton from "./new-document-button";
 import SidebarOptions from "./sidebar-options";
-
-interface RoomDocument extends DocumentData {
-    createdAt: string;
-    role: "owner" | "editor";
-    roomId: string;
-    userId: string;
-}
-
-type GroupedData = {
-    owner: (RoomDocument & { id: string })[];
-    editor: (RoomDocument & { id: string })[];
-};
 
 export default function Sidebar() {
     const { user } = useUser();
