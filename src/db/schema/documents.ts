@@ -13,7 +13,7 @@ export const documentsRelations = relations(documentsTable, ({ many }) => ({
     usersToDocuments: many(usersToDocuments),
 }));
 
-export type User = InferSelectModel<typeof documentsTable>;
-export type InsertUser = InferInsertModel<typeof documentsTable>;
+export type Document = InferSelectModel<typeof documentsTable>;
+export type InsertDocument = InferInsertModel<typeof documentsTable>;
 
 export default documentsTable;

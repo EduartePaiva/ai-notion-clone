@@ -4,34 +4,21 @@ import { useEffect, useState } from "react";
 
 import { useUser } from "@clerk/nextjs";
 import { useRoom } from "@liveblocks/react/suspense";
-import { collectionGroup, query, where } from "firebase/firestore";
-import { useCollection } from "react-firebase-hooks/firestore";
 
-import { db } from "@/firebase";
+import useUsersInDocument from "@/hooks/use-users-in-document";
 
 export default function useOwner(): boolean {
     const { user } = useUser();
     const room = useRoom();
     const [isOwner, setIsOwner] = useState(false);
-    const [usersInRoom] = useCollection(
-        user &&
-            query(collectionGroup(db, "rooms"), where("roomId", "==", room.id))
-    );
+    const { usersInDoc } = useUsersInDocument(room.id);
     useEffect(() => {
-        if (usersInRoom?.docs && usersInRoom.docs.length > 0) {
-            const owners = usersInRoom.docs.filter(
-                (doc) => doc.data().role === "owner"
-            );
-            if (
-                owners.some(
-                    (owner) =>
-                        owner.data().userId ===
-                        user?.emailAddresses[0].toString()
-                )
-            ) {
+        if (usersInDoc.length > 0) {
+            const owners = usersInDoc.filter((doc) => doc.role === "owner");
+            if (owners.some((owner) => owner.userId === user?.id)) {
                 setIsOwner(true);
             }
         }
-    }, [usersInRoom, user]);
+    }, [usersInDoc, user]);
     return isOwner;
 }

@@ -4,8 +4,6 @@ import { useState, useTransition } from "react";
 
 import { useUser } from "@clerk/nextjs";
 import { useRoom } from "@liveblocks/react/suspense";
-import { collectionGroup, query, where } from "firebase/firestore";
-import { useCollection } from "react-firebase-hooks/firestore";
 import { toast } from "sonner";
 
 import { removeUserFromDocumentAction } from "@/actions/actions";
@@ -18,7 +16,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { db } from "@/firebase";
+import useUsersInDocument from "@/hooks/use-users-in-document";
 import useOwner from "@/lib/use-owner";
 
 import { Button } from "./ui/button";
@@ -30,10 +28,7 @@ export default function ManageUsers() {
     const [open, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
-    const [usersInRoom] = useCollection(
-        user &&
-            query(collectionGroup(db, "rooms"), where("roomId", "==", room.id))
-    );
+    const { usersInDoc } = useUsersInDocument(room.id);
 
     const handleDelete = (userId: string) => {
         startTransition(async () => {
@@ -54,9 +49,7 @@ export default function ManageUsers() {
     return (
         <Dialog open={open} onOpenChange={setIsOpen}>
             <Button asChild variant={"outline"}>
-                <DialogTrigger>
-                    Users ({usersInRoom?.docs.length})
-                </DialogTrigger>
+                <DialogTrigger>Users ({usersInDoc.length})</DialogTrigger>
             </Button>
             <DialogContent>
                 <DialogHeader>
@@ -69,28 +62,26 @@ export default function ManageUsers() {
 
                 <hr className="my-2" />
                 <div className="flex flex-col gap-2">
-                    {usersInRoom?.docs.map((doc) => (
+                    {usersInDoc.map((doc) => (
                         <div
-                            key={doc.data().userId}
+                            key={doc.userId}
                             className="flex items-center justify-between"
                         >
                             <p className="font-light">
-                                {doc.data().userId ===
+                                {doc.userId ===
                                 user?.emailAddresses[0].toString()
-                                    ? `You (${doc.data().userId})`
-                                    : doc.data().userId}
+                                    ? `You (${doc.userId})`
+                                    : doc.userId}
                             </p>
                             <div className="flex items-center gap-2">
-                                <Button variant={"outline"}>
-                                    {doc.data().role}
-                                </Button>
+                                <Button variant={"outline"}>{doc.role}</Button>
                                 {isOwner &&
-                                    doc.data().userId !==
+                                    doc.userId !==
                                         user?.emailAddresses[0].toString() && (
                                         <Button
                                             variant={"destructive"}
                                             onClick={() =>
-                                                handleDelete(doc.data().userId)
+                                                handleDelete(doc.userId)
                                             }
                                             disabled={isPending}
                                             size={"sm"}

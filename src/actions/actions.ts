@@ -5,7 +5,6 @@ import { eq } from "drizzle-orm";
 
 import db from "@/db";
 import { documents, users, usersToDocuments } from "@/db/schema";
-import { adminDb } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 
 export async function createNewDocumentAction() {
@@ -66,6 +65,32 @@ export async function fetchDocumentsFromUser() {
             .from(usersToDocuments)
             .leftJoin(documents, eq(usersToDocuments.documentId, documents.id))
             .where(eq(usersToDocuments.userId, sessionClaims.sub));
+
+        return { docs: docs };
+    } catch (e) {
+        console.error(e);
+        return { error: "error fetching the data" };
+    }
+}
+
+export async function fetchUsersFromDocument(documentId: string) {
+    // TODO: validate roomId
+    try {
+        await auth.protect();
+
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            return { error: "Null session claims" };
+        }
+
+        // this need only userId and role
+        const docs = await db
+            .select({
+                userId: usersToDocuments.userId,
+                role: usersToDocuments.role,
+            })
+            .from(usersToDocuments)
+            .where(eq(usersToDocuments.documentId, documentId));
 
         return { docs: docs };
     } catch (e) {
