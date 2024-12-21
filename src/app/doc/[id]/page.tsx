@@ -4,18 +4,28 @@ import { use } from "react";
 
 import Document from "@/components/document";
 
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
 interface PageType {
     params: Promise<{
         id: string;
     }>;
+    searchParams: SearchParams;
+}
+
+function handleTitle(title: string | string[] | undefined): string {
+    if (title === undefined) return "undefined";
+    if (typeof title === "string") return title;
+    return title.length > 0 ? title[0] : "";
 }
 
 export default function DocumentPage(props: PageType) {
-    const params = use(props.params);
-    const { id } = params;
+    const searchParams = use(props.searchParams);
+    const { title } = searchParams;
+
     return (
         <div className="flex min-h-screen flex-1 flex-col">
-            <Document id={id} />
+            <Document title={handleTitle(title)} />
         </div>
     );
 }

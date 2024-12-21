@@ -14,6 +14,12 @@ import useUsersToDocumentsData from "@/hooks/use-users-to-documents-data";
 import NewDocumentButton from "./new-document-button";
 import SidebarOptions from "./sidebar-options";
 
+function handleHref(id: string, title: string): string {
+    const params = new URLSearchParams();
+    params.set("title", title);
+    return `/doc/${id}?${params.toString()}`;
+}
+
 export default function Sidebar() {
     const { groupedData } = useUsersToDocumentsData();
     const menuOptions = (
@@ -34,7 +40,10 @@ export default function Sidebar() {
                             <SidebarOptions
                                 key={doc.documentId}
                                 title={doc.documentTitle}
-                                href={`/doc/${doc.documentId}`}
+                                href={handleHref(
+                                    doc.documentId,
+                                    doc.documentTitle
+                                )}
                             />
                         ))}
                     </>
@@ -49,7 +58,10 @@ export default function Sidebar() {
                             <SidebarOptions
                                 title={doc.documentTitle}
                                 key={doc.documentId}
-                                href={`/doc/${doc.documentId}`}
+                                href={handleHref(
+                                    doc.documentId,
+                                    doc.documentTitle
+                                )}
                             />
                         ))}
                     </>

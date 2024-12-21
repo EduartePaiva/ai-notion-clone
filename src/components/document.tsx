@@ -13,11 +13,10 @@ import ManageUsers from "./manage-users";
 import { Button } from "./ui/button";
 
 type DocumentProps = {
-    id: string;
     title: string;
 };
 
-export default function Document({ id, title }: DocumentProps) {
+export default function Document({ title }: DocumentProps) {
     const [input, setInput] = useState(title);
     const [isUpdating, startTransition] = useTransition();
     const isOwner = useOwner();

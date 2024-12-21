@@ -15,7 +15,12 @@ export default function NewDocumentButton() {
         startTransition(async () => {
             // create a new document
             const docId = await createNewDocumentAction();
-            router.push(`docs/${docId?.docId}`);
+            if (docId.docId !== undefined) {
+                const params = new URLSearchParams();
+                params.set("title", "New Doc");
+                router.push(`doc/${docId.docId}?${params.toString()}`);
+            }
+            // TODO: handle error state
         });
     };
 
