@@ -53,8 +53,9 @@ export const usersToDocumentsRelations = relations(
 export type UsersToDocument = InferSelectModel<typeof usersToDocuments>;
 
 export interface SplitUsersToDocument<T extends UsersToDocument["role"]>
-    extends UsersToDocument {
+    extends Omit<UsersToDocument, "userId"> {
     role: T;
+    documentTitle: string;
 }
 
 export default usersToDocuments;

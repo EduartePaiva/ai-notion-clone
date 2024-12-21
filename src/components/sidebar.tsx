@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { useUser } from "@clerk/nextjs";
 import { MenuIcon } from "lucide-react";
 
 import {
@@ -12,54 +9,13 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { SplitUsersToDocument } from "@/db/schema/users-to-documents";
+import useUsersToDocumentsData from "@/hooks/use-users-to-documents-data";
 
 import NewDocumentButton from "./new-document-button";
 import SidebarOptions from "./sidebar-options";
 
-interface GroupedData {
-    editor: SplitUsersToDocument<"editor">[];
-    owner: SplitUsersToDocument<"owner">[];
-}
-
 export default function Sidebar() {
-    const { user } = useUser();
-    const [groupedData, setGroupedData] = useState<GroupedData>({
-        editor: [],
-        owner: [],
-    });
-
-    const [data] = useCollection<RoomDocument>(
-        user &&
-            query<RoomDocument, DocumentData>(
-                collectionGroup(db, "rooms") as Query<
-                    RoomDocument,
-                    DocumentData
-                >,
-                where("userId", "==", user.emailAddresses[0].toString())
-            )
-    );
-    useEffect(() => {
-        if (!data) return;
-        console.log(data);
-
-        const grouped = data.docs.reduce<GroupedData>(
-            (prev, current) => {
-                const roomData = current.data();
-                if (roomData.role == "owner") {
-                    prev.owner.push({ id: current.id, ...roomData });
-                }
-                if (roomData.role == "editor") {
-                    prev.editor.push({ id: current.id, ...roomData });
-                }
-                return prev;
-            },
-            { owner: [], editor: [] }
-        );
-        console.log(grouped);
-        setGroupedData(grouped);
-    }, [data]);
-
+    const { groupedData } = useUsersToDocumentsData();
     const menuOptions = (
         <>
             <NewDocumentButton />
@@ -76,9 +32,9 @@ export default function Sidebar() {
                         </h2>
                         {groupedData.owner.map((doc) => (
                             <SidebarOptions
-                                key={doc.id}
-                                id={doc.id}
-                                href={`/doc/${doc.id}`}
+                                key={doc.documentId}
+                                id={doc.documentId}
+                                href={`/doc/${doc.documentId}`}
                             />
                         ))}
                     </>
@@ -91,9 +47,9 @@ export default function Sidebar() {
                         </h2>
                         {groupedData.editor.map((doc) => (
                             <SidebarOptions
-                                key={doc.id}
-                                id={doc.id}
-                                href={`/doc/${doc.id}`}
+                                key={doc.documentId}
+                                id={doc.documentId}
+                                href={`/doc/${doc.documentId}`}
                             />
                         ))}
                     </>

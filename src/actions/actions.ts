@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { eq } from "drizzle-orm";
 
 import db from "@/db";
 import { documents, users, usersToDocuments } from "@/db/schema";
@@ -43,6 +44,33 @@ export async function createNewDocumentAction() {
     } catch (e) {
         console.error(e);
         return { error: "Error while creating the document" };
+    }
+}
+
+export async function fetchDocumentsFromUser() {
+    try {
+        await auth.protect();
+
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            return { error: "Null session claims" };
+        }
+
+        const docs = await db
+            .select({
+                documentId: usersToDocuments.documentId,
+                role: usersToDocuments.role,
+                createdAt: usersToDocuments.createdAt,
+                documentTitle: documents.title,
+            })
+            .from(usersToDocuments)
+            .leftJoin(documents, eq(usersToDocuments.documentId, documents.id))
+            .where(eq(usersToDocuments.userId, sessionClaims.sub));
+
+        return { docs: docs };
+    } catch (e) {
+        console.error(e);
+        return { error: "error fetching the data" };
     }
 }
 
