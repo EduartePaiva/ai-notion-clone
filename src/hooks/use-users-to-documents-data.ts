@@ -1,5 +1,7 @@
 import { useEffect, useState, useTransition } from "react";
 
+import { useUser } from "@clerk/nextjs";
+
 import { fetchDocumentsFromUser } from "@/actions/actions";
 import { SplitUsersToDocument } from "@/db/schema/users-to-documents";
 
@@ -14,39 +16,45 @@ export default function useUsersToDocumentsData() {
         owner: [],
     });
     const [fetching, startTransition] = useTransition();
+    const { isSignedIn } = useUser();
 
     useEffect(() => {
         startTransition(async () => {
             const docsData = await fetchDocumentsFromUser();
-
-            if (docsData.docs) {
-                const data: GroupedData = {
+            if (docsData.error !== undefined || !isSignedIn) {
+                setGroupedData({
                     editor: [],
                     owner: [],
-                };
-
-                docsData.docs.forEach((doc) => {
-                    if (doc.role === "editor") {
-                        data.editor.push({
-                            documentId: doc.documentId,
-                            createdAt: doc.createdAt,
-                            role: doc.role,
-                            documentTitle: doc.documentTitle ?? "",
-                        });
-                    } else {
-                        data.owner.push({
-                            documentId: doc.documentId,
-                            createdAt: doc.createdAt,
-                            role: doc.role,
-                            documentTitle: doc.documentTitle ?? "",
-                        });
-                    }
                 });
-
-                setGroupedData(data);
+                return;
             }
+
+            const data: GroupedData = {
+                editor: [],
+                owner: [],
+            };
+
+            docsData.docs.forEach((doc) => {
+                if (doc.role === "editor") {
+                    data.editor.push({
+                        documentId: doc.documentId,
+                        createdAt: doc.createdAt,
+                        role: doc.role,
+                        documentTitle: doc.documentTitle ?? "",
+                    });
+                } else {
+                    data.owner.push({
+                        documentId: doc.documentId,
+                        createdAt: doc.createdAt,
+                        role: doc.role,
+                        documentTitle: doc.documentTitle ?? "",
+                    });
+                }
+            });
+
+            setGroupedData(data);
         });
-    }, []);
+    }, [isSignedIn]);
 
     return { groupedData, fetching };
 }

@@ -33,7 +33,7 @@ export default function Sidebar() {
                         {groupedData.owner.map((doc) => (
                             <SidebarOptions
                                 key={doc.documentId}
-                                id={doc.documentId}
+                                title={doc.documentTitle}
                                 href={`/doc/${doc.documentId}`}
                             />
                         ))}
@@ -47,8 +47,8 @@ export default function Sidebar() {
                         </h2>
                         {groupedData.editor.map((doc) => (
                             <SidebarOptions
+                                title={doc.documentTitle}
                                 key={doc.documentId}
-                                id={doc.documentId}
                                 href={`/doc/${doc.documentId}`}
                             />
                         ))}
