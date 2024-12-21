@@ -1,5 +1,6 @@
-import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
+    foreignKey,
     pgEnum,
     pgTable,
     primaryKey,
@@ -14,19 +15,25 @@ import usersTable from "./users";
 export const roomRoleEnum = pgEnum("room_role_enum", ["owner", "editor"]);
 
 // this table link a user to a document, and document to a user. it's many to many relation
+// if the document is deleted, all usersToDOcuments that have this document is deleted automatically.
 const usersToDocuments = pgTable(
     "users_to_documents",
     {
         userId: text()
             .notNull()
             .references(() => usersTable.id),
-        documentId: uuid()
-            .notNull()
-            .references(() => documentsTable.id),
+        documentId: uuid().notNull(),
         role: roomRoleEnum().notNull(),
         createdAt: timestamp().defaultNow(),
     },
-    (t) => [primaryKey({ columns: [t.userId, t.documentId] })]
+    (t) => [
+        primaryKey({ columns: [t.userId, t.documentId] }),
+        foreignKey({
+            name: "document_fk",
+            columns: [t.documentId],
+            foreignColumns: [documentsTable.id],
+        }).onDelete("cascade"),
+    ]
 );
 
 export const usersToDocumentsRelations = relations(
@@ -42,8 +49,5 @@ export const usersToDocumentsRelations = relations(
         }),
     })
 );
-
-export type User = InferSelectModel<typeof usersToDocuments>;
-export type InsertUser = InferInsertModel<typeof usersToDocuments>;
 
 export default usersToDocuments;

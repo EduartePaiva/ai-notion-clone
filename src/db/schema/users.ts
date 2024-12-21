@@ -5,7 +5,7 @@ import usersToDocuments from "./users-to-documents";
 
 const usersTable = pgTable("users", {
     id: text().primaryKey().notNull(),
-    email: varchar({ length: 320 }),
+    email: varchar({ length: 320 }).notNull(),
 });
 
 export const usersRelations = relations(usersTable, ({ many }) => ({

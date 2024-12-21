@@ -2,35 +2,48 @@
 
 import { auth } from "@clerk/nextjs/server";
 
+import db from "@/db";
+import { documents, users, usersToDocuments } from "@/db/schema";
 import { adminDb } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 
 export async function createNewDocumentAction() {
-    await auth.protect();
+    try {
+        await auth.protect();
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            throw new Error("Null session claims");
+        }
+        const documentId = await db.transaction(async (tx) => {
+            // create a user if not exists, on conflict do nothing
+            await tx
+                .insert(users)
+                .values({
+                    id: sessionClaims.sub,
+                    email: sessionClaims.email,
+                })
+                .onConflictDoNothing({ target: [users.id] });
 
-    const { sessionClaims } = await auth();
-    if (sessionClaims === null) {
-        return;
-    }
+            // create a doc and return it's id
+            const [doc] = await tx
+                .insert(documents)
+                .values({ title: "New Doc" })
+                .returning();
 
-    const docCollectionRef = adminDb.collection("documents");
-    const docRef = await docCollectionRef.add({
-        title: "New Doc",
-    });
-
-    await adminDb
-        .collection("users")
-        .doc(sessionClaims.email)
-        .collection("rooms")
-        .doc(docRef.id)
-        .set({
-            userId: sessionClaims.email,
-            role: "owner",
-            createdAt: new Date(),
-            roomId: docRef.id,
+            // create the relation between the user and the doc
+            await tx.insert(usersToDocuments).values({
+                documentId: doc.id,
+                userId: sessionClaims.sub,
+                role: "owner",
+            });
+            return doc.id;
         });
 
-    return { docId: docRef.id };
+        return { docId: documentId };
+    } catch (e) {
+        console.error(e);
+        return { error: "Error while creating the document" };
+    }
 }
 
 export async function deleteDocumentAction(roomId: string): Promise<{

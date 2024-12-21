@@ -7,4 +7,4 @@
 [_] - Migrate from firebase to postgres? it'll depends on postgres capability against firebase
 [_] - dokerize the dev + postgres
 
-stopped at: 4:06
+stopped at: 4:16
