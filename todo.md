@@ -3,8 +3,10 @@
 [_] - setup my own liveblocks? using yjs+lexical and wss, this will be super hard
 
 
-[_] - firebase it's not working. Time to leave it behind to a traditional database
+[x] - firebase it's not working. Time to leave it behind to a traditional database
 [_] - Migrate from firebase to postgres? it'll depends on postgres capability against firebase
-[_] - dokerize the dev + postgres
+[x] - dokerize the dev + postgres
+[_] - fix liveblocks to work with the postgres database. It appear that I have to rework on the auth-endpoint
+
 
 stopped at: 4:16
