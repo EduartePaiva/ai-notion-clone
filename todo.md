@@ -4,10 +4,10 @@
 
 
 [x] - firebase it's not working. Time to leave it behind to a traditional database
-[_] - Migrate from firebase to postgres? it'll depends on postgres capability against firebase
+[x] - Migrate from firebase to postgres? it'll depends on postgres capability against firebase
 [x] - dokerize the dev + postgres
 [x] - fix liveblocks to work with the postgres database. It appear that I have to rework on the auth-endpoint
-[_] - make the update, invite and delete buttons to work
+[x] - make the update, invite and delete buttons to work
 [x] update title buttons
 [x] - delete doc button
 [x] - invite doc button
