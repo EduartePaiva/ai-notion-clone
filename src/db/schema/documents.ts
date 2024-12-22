@@ -5,8 +5,8 @@ import usersToDocuments from "./users-to-documents";
 
 const documentsTable = pgTable("documents", {
     id: uuid().defaultRandom().primaryKey().notNull(),
-    title: varchar({ length: 765 }),
-    createdAt: timestamp().defaultNow(),
+    title: varchar({ length: 765 }).notNull(),
+    createdAt: timestamp().defaultNow().notNull(),
 });
 
 export const documentsRelations = relations(documentsTable, ({ many }) => ({

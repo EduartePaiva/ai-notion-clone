@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { createNewDocumentAction } from "@/actions/actions";
 
 import { Button } from "./ui/button";
@@ -10,6 +12,7 @@ import { Button } from "./ui/button";
 export default function NewDocumentButton() {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
+    const tanstackClient = useQueryClient();
 
     const handleCreateNewDocument = () => {
         startTransition(async () => {
@@ -18,7 +21,12 @@ export default function NewDocumentButton() {
             if (docId.docId !== undefined) {
                 const params = new URLSearchParams();
                 params.set("title", "New Doc");
-                router.push(`doc/${docId.docId}?${params.toString()}`);
+                router.push(
+                    `${window.location.origin}/doc/${docId.docId}?${params.toString()}`
+                );
+                tanstackClient.invalidateQueries({
+                    queryKey: ["documents_from_user"],
+                });
             }
             // TODO: handle error state
         });

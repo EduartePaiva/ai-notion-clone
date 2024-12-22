@@ -1,7 +1,8 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
+import { z } from "zod";
 
 import db from "@/db";
 import { documents, users, usersToDocuments } from "@/db/schema";
@@ -64,7 +65,8 @@ export async function fetchDocumentsFromUser() {
             })
             .from(usersToDocuments)
             .leftJoin(documents, eq(usersToDocuments.documentId, documents.id))
-            .where(eq(usersToDocuments.userId, sessionClaims.sub));
+            .where(eq(usersToDocuments.userId, sessionClaims.sub))
+            .orderBy(asc(documents.createdAt));
 
         return { docs: docs };
     } catch (e) {
@@ -93,6 +95,52 @@ export async function fetchUsersFromDocument(documentId: string) {
             .where(eq(usersToDocuments.documentId, documentId));
 
         return { docs: docs };
+    } catch (e) {
+        console.error(e);
+        return { error: "error fetching the data" };
+    }
+}
+
+const parseUpdateDocumentData = z.object({
+    newTitle: z.string().min(1),
+    documentId: z.string().uuid(),
+});
+
+export async function updateDocumentTitleAction(unparsedData: {
+    newTitle: string;
+    documentId: string;
+}) {
+    try {
+        // Validade Data with zod
+        const data = parseUpdateDocumentData.parse(unparsedData);
+
+        // Validate user
+        await auth.protect();
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            return { error: "Null session claims" };
+        }
+
+        // check if the user can update the title first
+        const result = await db
+            .select({ docId: usersToDocuments.documentId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.documentId, data.documentId),
+                    eq(usersToDocuments.userId, sessionClaims.sub)
+                )
+            );
+        if (result.length === 0) {
+            return { error: "Unauthorized" };
+        }
+
+        // update the document title
+        await db
+            .update(documents)
+            .set({ title: data.newTitle })
+            .where(eq(documents.id, data.documentId));
+        return { success: true };
     } catch (e) {
         console.error(e);
         return { error: "error fetching the data" };

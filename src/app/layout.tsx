@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import Header from "@/components/header";
+import ReactQueryProvider from "@/components/providers/react-query-provider";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -27,16 +28,18 @@ export default function RootLayout({
                 />
 
                 <body>
-                    <Header />
-                    <div className="flex min-h-screen">
-                        {/* Sidebar */}
-                        <Sidebar />
+                    <ReactQueryProvider>
+                        <Header />
+                        <div className="flex min-h-screen">
+                            {/* Sidebar */}
+                            <Sidebar />
 
-                        <div className="scrollbar-hide flex-1 overflow-y-auto bg-gray-100 p-4">
-                            {children}
+                            <div className="scrollbar-hide flex-1 overflow-y-auto bg-gray-100 p-4">
+                                {children}
+                            </div>
                         </div>
-                    </div>
-                    <Toaster position="top-center" />
+                        <Toaster position="top-center" />
+                    </ReactQueryProvider>
                 </body>
             </html>
         </ClerkProvider>

@@ -2,6 +2,10 @@
 
 import { FormEvent, useState, useTransition } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { updateDocumentTitleAction } from "@/actions/actions";
 import { Input } from "@/components/ui/input";
 import useOwner from "@/lib/use-owner";
 
@@ -14,21 +18,34 @@ import { Button } from "./ui/button";
 
 type DocumentProps = {
     title: string;
+    id: string;
 };
 
-export default function Document({ title }: DocumentProps) {
+export default function Document({ title, id }: DocumentProps) {
     const [input, setInput] = useState(title);
     const [isUpdating, startTransition] = useTransition();
     const isOwner = useOwner();
+    const tanstackClient = useQueryClient();
 
-    const updateTitle = (e: FormEvent<HTMLFormElement>) => {
+    const updateTitle = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (input.trim()) {
             startTransition(async () => {
-                // await updateDoc(doc(db, "documents", id), {
-                //     title: input.trim(),
-                // });
+                const result = await updateDocumentTitleAction({
+                    documentId: id,
+                    newTitle: input,
+                });
+
+                if (result.success) {
+                    toast.success("Title updated");
+                    tanstackClient.invalidateQueries({
+                        queryKey: ["documents_from_user"],
+                    });
+                }
+
+                if (result.error) {
+                    toast.error(result.error);
+                }
             });
         }
     };

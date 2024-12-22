@@ -22,10 +22,11 @@ function handleTitle(title: string | string[] | undefined): string {
 export default function DocumentPage(props: PageType) {
     const searchParams = use(props.searchParams);
     const { title } = searchParams;
+    const { id } = use(props.params);
 
     return (
         <div className="flex min-h-screen flex-1 flex-col">
-            <Document title={handleTitle(title)} />
+            <Document title={handleTitle(title)} id={id} />
         </div>
     );
 }

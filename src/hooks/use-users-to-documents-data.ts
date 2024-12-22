@@ -1,6 +1,5 @@
-import { useEffect, useState, useTransition } from "react";
-
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 
 import { fetchDocumentsFromUser } from "@/actions/actions";
 import { SplitUsersToDocument } from "@/db/schema/users-to-documents";
@@ -10,30 +9,21 @@ interface GroupedData {
     owner: SplitUsersToDocument<"owner">[];
 }
 
-export default function useUsersToDocumentsData() {
-    const [groupedData, setGroupedData] = useState<GroupedData>({
-        editor: [],
-        owner: [],
-    });
-    const [fetching, startTransition] = useTransition();
+export default function useDocumentsFromUser() {
     const { isSignedIn } = useUser();
 
-    useEffect(() => {
-        startTransition(async () => {
+    const { data, error, isLoading } = useQuery({
+        queryKey: ["documents_from_user"],
+        queryFn: async () => {
             const docsData = await fetchDocumentsFromUser();
             if (docsData.error !== undefined || !isSignedIn) {
-                setGroupedData({
-                    editor: [],
-                    owner: [],
-                });
-                return;
+                throw new Error("error fetching data");
             }
 
             const data: GroupedData = {
                 editor: [],
                 owner: [],
             };
-
             docsData.docs.forEach((doc) => {
                 if (doc.role === "editor") {
                     data.editor.push({
@@ -51,10 +41,9 @@ export default function useUsersToDocumentsData() {
                     });
                 }
             });
+            return data;
+        },
+    });
 
-            setGroupedData(data);
-        });
-    }, [isSignedIn]);
-
-    return { groupedData, fetching };
+    return { groupedData: data, isLoading, error };
 }

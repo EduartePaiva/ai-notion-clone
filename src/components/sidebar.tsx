@@ -9,7 +9,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import useUsersToDocumentsData from "@/hooks/use-users-to-documents-data";
+import useDocumentsFromUser from "@/hooks/use-users-to-documents-data";
 
 import NewDocumentButton from "./new-document-button";
 import SidebarOptions from "./sidebar-options";
@@ -21,13 +21,13 @@ function handleHref(id: string, title: string): string {
 }
 
 export default function Sidebar() {
-    const { groupedData } = useUsersToDocumentsData();
+    const { groupedData } = useDocumentsFromUser();
     const menuOptions = (
         <>
             <NewDocumentButton />
             {/* My Documents */}
             <div className="flex flex-col space-y-4 py-4 md:max-w-36">
-                {groupedData.owner.length === 0 ? (
+                {groupedData && groupedData.owner.length === 0 ? (
                     <h2 className="text-sm font-semibold text-gray-500">
                         No Documents found
                     </h2>
@@ -36,20 +36,21 @@ export default function Sidebar() {
                         <h2 className="text-sm font-semibold text-gray-500">
                             My Documents
                         </h2>
-                        {groupedData.owner.map((doc) => (
-                            <SidebarOptions
-                                key={doc.documentId}
-                                title={doc.documentTitle}
-                                href={handleHref(
-                                    doc.documentId,
-                                    doc.documentTitle
-                                )}
-                            />
-                        ))}
+                        {groupedData &&
+                            groupedData.owner.map((doc) => (
+                                <SidebarOptions
+                                    key={doc.documentId}
+                                    title={doc.documentTitle}
+                                    href={handleHref(
+                                        doc.documentId,
+                                        doc.documentTitle
+                                    )}
+                                />
+                            ))}
                     </>
                 )}
                 {/* Shared with me */}
-                {groupedData.editor.length !== 0 && (
+                {groupedData && groupedData.editor.length !== 0 && (
                     <>
                         <h2 className="text-sm font-semibold text-gray-500">
                             Shared with Me
