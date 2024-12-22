@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { deleteDocumentAction } from "@/actions/actions";
@@ -23,6 +24,7 @@ export default function DeleteDocument() {
     const [isPending, startTransition] = useTransition();
     const pathname = usePathname();
     const router = useRouter();
+    const tanstackClient = useQueryClient();
 
     const handleDelete = async () => {
         const roomId = pathname.split("/").pop();
@@ -30,11 +32,13 @@ export default function DeleteDocument() {
 
         startTransition(async () => {
             const { success } = await deleteDocumentAction(roomId);
-
             if (success) {
                 setIsOpen(false);
                 router.replace("/");
                 toast.success("Room deleted successfully!");
+                tanstackClient.invalidateQueries({
+                    queryKey: ["documents_from_user"],
+                });
             } else {
                 toast.error("Failed to delete the room!");
             }

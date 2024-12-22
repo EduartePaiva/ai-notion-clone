@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState, useTransition } from "react";
+import { FormEvent, useState, useTransition } from "react";
 
-import { doc, updateDoc } from "firebase/firestore";
-import { useDocumentData } from "react-firebase-hooks/firestore";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
+import { updateDocumentTitleAction } from "@/actions/actions";
 import { Input } from "@/components/ui/input";
-import { db } from "@/firebase";
 import useOwner from "@/lib/use-owner";
 
 import Avatars from "./avatars";
@@ -17,29 +17,35 @@ import ManageUsers from "./manage-users";
 import { Button } from "./ui/button";
 
 type DocumentProps = {
+    title: string;
     id: string;
 };
 
-export default function Document({ id }: DocumentProps) {
-    const [data] = useDocumentData(doc(db, "documents", id));
-    const [input, setInput] = useState("");
+export default function Document({ title, id }: DocumentProps) {
+    const [input, setInput] = useState(title);
     const [isUpdating, startTransition] = useTransition();
     const isOwner = useOwner();
+    const tanstackClient = useQueryClient();
 
-    useEffect(() => {
-        if (data) {
-            setInput(data.title);
-        }
-    }, [data]);
-
-    const updateTitle = (e: FormEvent<HTMLFormElement>) => {
+    const updateTitle = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (input.trim()) {
             startTransition(async () => {
-                await updateDoc(doc(db, "documents", id), {
-                    title: input.trim(),
+                const result = await updateDocumentTitleAction({
+                    documentId: id,
+                    newTitle: input,
                 });
+
+                if (result.success) {
+                    toast.success("Title updated");
+                    tanstackClient.invalidateQueries({
+                        queryKey: ["documents_from_user"],
+                    });
+                }
+
+                if (result.error) {
+                    toast.error(result.error);
+                }
             });
         }
     };
@@ -62,7 +68,7 @@ export default function Document({ id }: DocumentProps) {
                     {isOwner && (
                         <>
                             {/* Invite User */}
-                            <InviteUser />
+                            <InviteUser documentId={id} />
                             {/* Delete document */}
                             <DeleteDocument />
                         </>

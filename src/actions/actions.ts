@@ -1,10 +1,11 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { and, asc, eq } from "drizzle-orm";
+import { z } from "zod";
 
 import db from "@/db";
 import { documents, users, usersToDocuments } from "@/db/schema";
-import { adminDb } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 
 export async function createNewDocumentAction() {
@@ -46,27 +47,146 @@ export async function createNewDocumentAction() {
     }
 }
 
+export async function fetchDocumentsFromUser() {
+    try {
+        await auth.protect();
+
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            return { error: "Null session claims" };
+        }
+
+        const docs = await db
+            .select({
+                documentId: usersToDocuments.documentId,
+                role: usersToDocuments.role,
+                createdAt: usersToDocuments.createdAt,
+                documentTitle: documents.title,
+            })
+            .from(usersToDocuments)
+            .leftJoin(documents, eq(usersToDocuments.documentId, documents.id))
+            .where(eq(usersToDocuments.userId, sessionClaims.sub))
+            .orderBy(asc(documents.createdAt));
+
+        return { docs: docs };
+    } catch (e) {
+        console.error(e);
+        return { error: "error fetching the data" };
+    }
+}
+
+export async function fetchUsersFromDocument(documentId: string) {
+    // TODO: validate roomId
+    try {
+        await auth.protect();
+
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            return { error: "Null session claims" };
+        }
+
+        // this need userId, role and user email
+        const docs = await db
+            .select({
+                userId: usersToDocuments.userId,
+                role: usersToDocuments.role,
+                userEmail: users.email,
+            })
+            .from(usersToDocuments)
+            .leftJoin(users, eq(users.id, usersToDocuments.userId))
+            .where(eq(usersToDocuments.documentId, documentId));
+
+        return { docs: docs };
+    } catch (e) {
+        console.error(e);
+        return { error: "error fetching the data" };
+    }
+}
+
+const parseUpdateDocumentData = z.object({
+    newTitle: z.string().min(1),
+    documentId: z.string().uuid(),
+});
+
+export async function updateDocumentTitleAction(unparsedData: {
+    newTitle: string;
+    documentId: string;
+}) {
+    try {
+        // Validade Data with zod
+        const data = parseUpdateDocumentData.parse(unparsedData);
+
+        // Validate user
+        await auth.protect();
+        const { sessionClaims } = await auth();
+        if (sessionClaims === null) {
+            return { error: "Null session claims" };
+        }
+
+        // check if the user can update the title first
+        const result = await db
+            .select({ docId: usersToDocuments.documentId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.documentId, data.documentId),
+                    eq(usersToDocuments.userId, sessionClaims.sub)
+                )
+            );
+        if (result.length === 0) {
+            return { error: "Unauthorized" };
+        }
+
+        // update the document title
+        await db
+            .update(documents)
+            .set({ title: data.newTitle })
+            .where(eq(documents.id, data.documentId));
+        return { success: true };
+    } catch (e) {
+        console.error(e);
+        return { error: "error fetching the data" };
+    }
+}
+
 export async function deleteDocumentAction(roomId: string): Promise<{
     success: boolean;
 }> {
+    // Validate user
     await auth.protect();
+    const { sessionClaims } = await auth();
+    if (sessionClaims === null) {
+        return { success: false };
+    }
     console.log(`deleteDocument: ${roomId}`);
-
     try {
-        // delete the document reference itself
-        await adminDb.collection("documents").doc(roomId).delete();
+        // validate that the session user is the owner of current room
+        const isOwner = await db
+            .select({ something: usersToDocuments.userId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.userId, sessionClaims.sub),
+                    eq(usersToDocuments.documentId, roomId),
+                    eq(usersToDocuments.role, "owner")
+                )
+            );
+        if (isOwner.length === 0) {
+            // User is unauthenticated
+            return { success: false };
+        }
 
-        const query = await adminDb
-            .collectionGroup("rooms")
-            .where("roomId", "==", roomId)
-            .get();
-        const batch = adminDb.batch();
-        // delete the room reference in the user's collection for every user in the room
-        query.forEach((doc) => batch.delete(doc.ref));
-
-        await batch.commit();
-
-        await liveblocks.deleteRoom(roomId);
+        // delete the document inside a transaction
+        await db.transaction(async (tx) => {
+            await tx.delete(documents).where(eq(documents.id, roomId));
+            try {
+                await liveblocks.deleteRoom(roomId);
+            } catch (e) {
+                console.error(e);
+                tx.rollback();
+            }
+            // is this better than not using a transaction? maybe not
+        });
 
         return { success: true };
     } catch (err) {
@@ -76,29 +196,61 @@ export async function deleteDocumentAction(roomId: string): Promise<{
 }
 
 export async function inviteUserToDocumentAction({
-    roomId,
+    documentId,
     userEmail,
 }: {
-    roomId: string;
+    documentId: string;
     userEmail: string;
 }): Promise<{
     success: boolean;
 }> {
+    // TODO: validate the data using zod
+    // Validate user
     await auth.protect();
+    const { sessionClaims } = await auth();
+    if (sessionClaims === null) {
+        return { success: false };
+    }
+    // Validate that the user isn't adding himself
+    if (userEmail === sessionClaims.email) {
+        return { success: false };
+    }
+
     console.log(`inviteUser: ${userEmail}`);
 
     try {
-        await adminDb
-            .collection("users")
-            .doc(userEmail)
-            .collection("rooms")
-            .doc(roomId)
-            .set({
-                userId: userEmail,
-                role: "editor",
-                createdAt: new Date(),
-                roomId,
-            });
+        // validate that the session user is the owner of current document, this validates too that the document exists
+        const isOwner = await db
+            .select({ something: usersToDocuments.userId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.userId, sessionClaims.sub),
+                    eq(usersToDocuments.documentId, documentId),
+                    eq(usersToDocuments.role, "owner")
+                )
+            );
+        if (isOwner.length === 0) {
+            // User is unauthenticated
+            return { success: false };
+        }
+
+        // create a invitation for the user
+        const invitedUserId = await db
+            .select({ userId: users.id })
+            .from(users)
+            .where(eq(users.email, userEmail));
+
+        if (invitedUserId.length === 0) {
+            // the problem here is that the user that is being invited needs to create a docs first
+            console.error("invited user don't exists");
+            return { success: false };
+        }
+        await db.insert(usersToDocuments).values({
+            documentId: documentId,
+            userId: invitedUserId[0].userId,
+            role: "editor",
+        });
 
         return { success: true };
     } catch (err) {
@@ -108,23 +260,53 @@ export async function inviteUserToDocumentAction({
 }
 
 export async function removeUserFromDocumentAction({
-    roomId,
+    documentId,
     userId,
 }: {
-    roomId: string;
+    documentId: string;
     userId: string;
 }): Promise<{
     success: boolean;
 }> {
+    // TODO: validate the data using zod
+    // Validate user
     await auth.protect();
-    console.log("removeUserFromDocument", roomId, userId);
+    const { sessionClaims } = await auth();
+    if (sessionClaims === null) {
+        return { success: false };
+    }
+    // Validate that the user isn't removing himself
+    if (userId === sessionClaims.sub) {
+        return { success: false };
+    }
+
+    console.log(`remove invite from user: ${userId}`);
+
     try {
-        await adminDb
-            .collection("users")
-            .doc(userId)
-            .collection("rooms")
-            .doc(roomId)
-            .delete();
+        // validate that the session user is the owner of current document, this validates too that the document exists
+        const isOwner = await db
+            .select({ something: usersToDocuments.userId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.userId, sessionClaims.sub),
+                    eq(usersToDocuments.documentId, documentId),
+                    eq(usersToDocuments.role, "owner")
+                )
+            );
+        if (isOwner.length === 0) {
+            // User is unauthenticated
+            return { success: false };
+        }
+
+        await db
+            .delete(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.documentId, documentId),
+                    eq(usersToDocuments.userId, userId)
+                )
+            );
 
         return { success: true };
     } catch (err) {

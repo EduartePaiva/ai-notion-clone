@@ -1,17 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { useUser } from "@clerk/nextjs";
-import {
-    type DocumentData,
-    type Query,
-    collectionGroup,
-    query,
-    where,
-} from "firebase/firestore";
 import { MenuIcon } from "lucide-react";
-import { useCollection } from "react-firebase-hooks/firestore";
 
 import {
     Sheet,
@@ -20,67 +9,25 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { db } from "@/firebase";
+import useDocumentsFromUser from "@/hooks/use-users-to-documents-data";
 
 import NewDocumentButton from "./new-document-button";
 import SidebarOptions from "./sidebar-options";
 
-interface RoomDocument extends DocumentData {
-    createdAt: string;
-    role: "owner" | "editor";
-    roomId: string;
-    userId: string;
+function handleHref(id: string, title: string): string {
+    const params = new URLSearchParams();
+    params.set("title", title);
+    return `/doc/${id}?${params.toString()}`;
 }
 
-type GroupedData = {
-    owner: (RoomDocument & { id: string })[];
-    editor: (RoomDocument & { id: string })[];
-};
-
 export default function Sidebar() {
-    const { user } = useUser();
-    const [groupedData, setGroupedData] = useState<GroupedData>({
-        editor: [],
-        owner: [],
-    });
-
-    const [data] = useCollection<RoomDocument>(
-        user &&
-            query<RoomDocument, DocumentData>(
-                collectionGroup(db, "rooms") as Query<
-                    RoomDocument,
-                    DocumentData
-                >,
-                where("userId", "==", user.emailAddresses[0].toString())
-            )
-    );
-    useEffect(() => {
-        if (!data) return;
-        console.log(data);
-
-        const grouped = data.docs.reduce<GroupedData>(
-            (prev, current) => {
-                const roomData = current.data();
-                if (roomData.role == "owner") {
-                    prev.owner.push({ id: current.id, ...roomData });
-                }
-                if (roomData.role == "editor") {
-                    prev.editor.push({ id: current.id, ...roomData });
-                }
-                return prev;
-            },
-            { owner: [], editor: [] }
-        );
-        console.log(grouped);
-        setGroupedData(grouped);
-    }, [data]);
-
+    const { groupedData } = useDocumentsFromUser();
     const menuOptions = (
         <>
             <NewDocumentButton />
             {/* My Documents */}
             <div className="flex flex-col space-y-4 py-4 md:max-w-36">
-                {groupedData.owner.length === 0 ? (
+                {groupedData && groupedData.owner.length === 0 ? (
                     <h2 className="text-sm font-semibold text-gray-500">
                         No Documents found
                     </h2>
@@ -89,26 +36,33 @@ export default function Sidebar() {
                         <h2 className="text-sm font-semibold text-gray-500">
                             My Documents
                         </h2>
-                        {groupedData.owner.map((doc) => (
-                            <SidebarOptions
-                                key={doc.id}
-                                id={doc.id}
-                                href={`/doc/${doc.id}`}
-                            />
-                        ))}
+                        {groupedData &&
+                            groupedData.owner.map((doc) => (
+                                <SidebarOptions
+                                    key={doc.documentId}
+                                    title={doc.documentTitle}
+                                    href={handleHref(
+                                        doc.documentId,
+                                        doc.documentTitle
+                                    )}
+                                />
+                            ))}
                     </>
                 )}
                 {/* Shared with me */}
-                {groupedData.editor.length !== 0 && (
+                {groupedData && groupedData.editor.length !== 0 && (
                     <>
                         <h2 className="text-sm font-semibold text-gray-500">
                             Shared with Me
                         </h2>
                         {groupedData.editor.map((doc) => (
                             <SidebarOptions
-                                key={doc.id}
-                                id={doc.id}
-                                href={`/doc/${doc.id}`}
+                                title={doc.documentTitle}
+                                key={doc.documentId}
+                                href={handleHref(
+                                    doc.documentId,
+                                    doc.documentTitle
+                                )}
                             />
                         ))}
                     </>

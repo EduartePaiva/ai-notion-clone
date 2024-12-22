@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@clerk/nextjs/server";
+import { eq } from "drizzle-orm";
 
-import { adminDb } from "@/firebase-admin";
+import db from "@/db";
+import { usersToDocuments } from "@/db/schema";
 import liveblocks from "@/lib/liveblocks";
 
 export async function POST(req: NextRequest) {
@@ -24,18 +26,26 @@ export async function POST(req: NextRequest) {
         },
     });
 
-    const usersInRoom = await adminDb
-        .collectionGroup("rooms")
-        .where("userId", "==", sessionClaims.email)
-        .get();
+    try {
+        const usersInRoom = await db
+            .select()
+            .from(usersToDocuments)
+            .where(eq(usersToDocuments.userId, sessionClaims.sub));
 
-    const userInRoom = usersInRoom.docs.find((doc) => doc.id === room);
+        const userInRoom = usersInRoom.find((doc) => doc.documentId === room);
 
-    if (userInRoom?.exists) {
-        session.allow(room, session.FULL_ACCESS);
-        const { body, status } = await session.authorize();
-        console.log("you are authorized");
-        return new Response(body, { status });
+        if (userInRoom !== undefined) {
+            session.allow(room, session.FULL_ACCESS);
+            const { body, status } = await session.authorize();
+            console.log("you are authorized");
+            return new Response(body, { status });
+        }
+    } catch (e) {
+        console.error(e);
+        return NextResponse.json(
+            { message: "Database Error" },
+            { status: 403 }
+        );
     }
 
     return NextResponse.json(
