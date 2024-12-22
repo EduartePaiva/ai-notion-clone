@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { useUser } from "@clerk/nextjs";
 import { useRoom } from "@liveblocks/react/suspense";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { removeUserFromDocumentAction } from "@/actions/actions";
@@ -27,20 +28,29 @@ export default function ManageUsers() {
     const isOwner = useOwner();
     const [open, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const tanstackClient = useQueryClient();
 
     const { usersInDoc } = useUsersInDocument(room.id);
+
+    if (usersInDoc === undefined) {
+        return <Button variant={"outline"}>Users (0)</Button>;
+    }
 
     const handleDelete = (userId: string) => {
         startTransition(async () => {
             if (!user) return;
 
             const { success } = await removeUserFromDocumentAction({
-                roomId: room.id,
+                documentId: room.id,
                 userId: userId,
             });
 
             if (success) {
+                // have to revalidate this
                 toast.success("User removed from room successfully!");
+                tanstackClient.invalidateQueries({
+                    queryKey: ["users_in_doc"],
+                });
             } else {
                 toast.error("Failed to remove user from room!");
             }
@@ -68,27 +78,22 @@ export default function ManageUsers() {
                             className="flex items-center justify-between"
                         >
                             <p className="font-light">
-                                {doc.userId ===
-                                user?.emailAddresses[0].toString()
-                                    ? `You (${doc.userId})`
-                                    : doc.userId}
+                                {doc.userId === user?.id
+                                    ? `You (${doc.userEmail})`
+                                    : doc.userEmail}
                             </p>
                             <div className="flex items-center gap-2">
                                 <Button variant={"outline"}>{doc.role}</Button>
-                                {isOwner &&
-                                    doc.userId !==
-                                        user?.emailAddresses[0].toString() && (
-                                        <Button
-                                            variant={"destructive"}
-                                            onClick={() =>
-                                                handleDelete(doc.userId)
-                                            }
-                                            disabled={isPending}
-                                            size={"sm"}
-                                        >
-                                            {isPending ? "Removing" : "X"}
-                                        </Button>
-                                    )}
+                                {isOwner && doc.userId !== user?.id && (
+                                    <Button
+                                        variant={"destructive"}
+                                        onClick={() => handleDelete(doc.userId)}
+                                        disabled={isPending}
+                                        size={"sm"}
+                                    >
+                                        {isPending ? "Removing" : "X"}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ))}

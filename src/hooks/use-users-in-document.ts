@@ -1,27 +1,27 @@
-import { useEffect, useState, useTransition } from "react";
-
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 
 import { fetchUsersFromDocument } from "@/actions/actions";
 import { UsersToDocument } from "@/db/schema/users-to-documents";
 
-export default function useUsersInDocument(documentId: string) {
-    const [usersInDoc, setUsersInDoc] = useState<
-        { userId: string; role: UsersToDocument["role"] }[]
-    >([]);
-    const [fetching, startTransition] = useTransition();
-    const { isSignedIn } = useUser();
+type UserInDocType = {
+    userId: string;
+    role: UsersToDocument["role"];
+    userEmail: string | null;
+};
 
-    useEffect(() => {
-        startTransition(async () => {
+export default function useUsersInDocument(documentId: string) {
+    const { isSignedIn } = useUser();
+    const { data, isFetching } = useQuery({
+        queryKey: ["users_in_doc"],
+        queryFn: async () => {
             const data = await fetchUsersFromDocument(documentId);
             if (data.error !== undefined || !isSignedIn) {
-                return;
+                throw new Error(data.error);
             }
+            return data.docs satisfies UserInDocType[];
+        },
+    });
 
-            setUsersInDoc(data.docs);
-        });
-    }, [isSignedIn, documentId]);
-
-    return { usersInDoc, fetching };
+    return { usersInDoc: data, isFetching };
 }

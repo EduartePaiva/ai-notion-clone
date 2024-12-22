@@ -85,13 +85,15 @@ export async function fetchUsersFromDocument(documentId: string) {
             return { error: "Null session claims" };
         }
 
-        // this need only userId and role
+        // this need userId, role and user email
         const docs = await db
             .select({
                 userId: usersToDocuments.userId,
                 role: usersToDocuments.role,
+                userEmail: users.email,
             })
             .from(usersToDocuments)
+            .leftJoin(users, eq(users.id, usersToDocuments.userId))
             .where(eq(usersToDocuments.documentId, documentId));
 
         return { docs: docs };
@@ -194,29 +196,61 @@ export async function deleteDocumentAction(roomId: string): Promise<{
 }
 
 export async function inviteUserToDocumentAction({
-    roomId,
+    documentId,
     userEmail,
 }: {
-    roomId: string;
+    documentId: string;
     userEmail: string;
 }): Promise<{
     success: boolean;
 }> {
+    // TODO: validate the data using zod
+    // Validate user
     await auth.protect();
+    const { sessionClaims } = await auth();
+    if (sessionClaims === null) {
+        return { success: false };
+    }
+    // Validate that the user isn't adding himself
+    if (userEmail === sessionClaims.email) {
+        return { success: false };
+    }
+
     console.log(`inviteUser: ${userEmail}`);
 
     try {
-        await adminDb
-            .collection("users")
-            .doc(userEmail)
-            .collection("rooms")
-            .doc(roomId)
-            .set({
-                userId: userEmail,
-                role: "editor",
-                createdAt: new Date(),
-                roomId,
-            });
+        // validate that the session user is the owner of current document, this validates too that the document exists
+        const isOwner = await db
+            .select({ something: usersToDocuments.userId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.userId, sessionClaims.sub),
+                    eq(usersToDocuments.documentId, documentId),
+                    eq(usersToDocuments.role, "owner")
+                )
+            );
+        if (isOwner.length === 0) {
+            // User is unauthenticated
+            return { success: false };
+        }
+
+        // create a invitation for the user
+        const invitedUserId = await db
+            .select({ userId: users.id })
+            .from(users)
+            .where(eq(users.email, userEmail));
+
+        if (invitedUserId.length === 0) {
+            // the problem here is that the user that is being invited needs to create a docs first
+            console.error("invited user don't exists");
+            return { success: false };
+        }
+        await db.insert(usersToDocuments).values({
+            documentId: documentId,
+            userId: invitedUserId[0].userId,
+            role: "editor",
+        });
 
         return { success: true };
     } catch (err) {
@@ -226,23 +260,53 @@ export async function inviteUserToDocumentAction({
 }
 
 export async function removeUserFromDocumentAction({
-    roomId,
+    documentId,
     userId,
 }: {
-    roomId: string;
+    documentId: string;
     userId: string;
 }): Promise<{
     success: boolean;
 }> {
+    // TODO: validate the data using zod
+    // Validate user
     await auth.protect();
-    console.log("removeUserFromDocument", roomId, userId);
+    const { sessionClaims } = await auth();
+    if (sessionClaims === null) {
+        return { success: false };
+    }
+    // Validate that the user isn't removing himself
+    if (userId === sessionClaims.sub) {
+        return { success: false };
+    }
+
+    console.log(`remove invite from user: ${userId}`);
+
     try {
-        await adminDb
-            .collection("users")
-            .doc(userId)
-            .collection("rooms")
-            .doc(roomId)
-            .delete();
+        // validate that the session user is the owner of current document, this validates too that the document exists
+        const isOwner = await db
+            .select({ something: usersToDocuments.userId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.userId, sessionClaims.sub),
+                    eq(usersToDocuments.documentId, documentId),
+                    eq(usersToDocuments.role, "owner")
+                )
+            );
+        if (isOwner.length === 0) {
+            // User is unauthenticated
+            return { success: false };
+        }
+
+        await db
+            .delete(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.documentId, documentId),
+                    eq(usersToDocuments.userId, userId)
+                )
+            );
 
         return { success: true };
     } catch (err) {

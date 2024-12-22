@@ -13,7 +13,7 @@ export default function useOwner(): boolean {
     const [isOwner, setIsOwner] = useState(false);
     const { usersInDoc } = useUsersInDocument(room.id);
     useEffect(() => {
-        if (usersInDoc.length > 0) {
+        if (usersInDoc !== undefined && usersInDoc.length > 0) {
             const owners = usersInDoc.filter((doc) => doc.role === "owner");
             if (owners.some((owner) => owner.userId === user?.id)) {
                 setIsOwner(true);

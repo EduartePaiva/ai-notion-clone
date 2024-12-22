@@ -68,7 +68,7 @@ export default function Document({ title, id }: DocumentProps) {
                     {isOwner && (
                         <>
                             {/* Invite User */}
-                            <InviteUser />
+                            <InviteUser documentId={id} />
                             {/* Delete document */}
                             <DeleteDocument />
                         </>

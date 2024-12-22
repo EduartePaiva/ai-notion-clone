@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { inviteUserToDocumentAction } from "@/actions/actions";
@@ -19,25 +19,25 @@ import {
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
-export default function InviteUser() {
+export default function InviteUser({ documentId }: { documentId: string }) {
     const [open, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
-    const pathname = usePathname();
     const [email, setEmail] = useState("");
+    const tanstackClient = useQueryClient();
 
     const handleInvite = async () => {
-        const roomId = pathname.split("/").pop();
-        if (!roomId) return;
-
         startTransition(async () => {
             const { success } = await inviteUserToDocumentAction({
-                roomId,
+                documentId: documentId,
                 userEmail: email,
             });
             if (success) {
                 setIsOpen(false);
                 setEmail("");
                 toast.success("User Added to Room successfully!");
+                tanstackClient.invalidateQueries({
+                    queryKey: ["users_in_doc"],
+                });
             } else {
                 toast.error("Failed to add user to room!");
             }
