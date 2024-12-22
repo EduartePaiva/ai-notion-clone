@@ -8,5 +8,7 @@
 [x] - dokerize the dev + postgres
 [x] - fix liveblocks to work with the postgres database. It appear that I have to rework on the auth-endpoint
 [_] - make the update, invite and delete buttons to work
+[x] update title buttons
+[_] - delete doc button
 
 stopped at: 4:16

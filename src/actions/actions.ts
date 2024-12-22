@@ -150,24 +150,41 @@ export async function updateDocumentTitleAction(unparsedData: {
 export async function deleteDocumentAction(roomId: string): Promise<{
     success: boolean;
 }> {
+    // Validate user
     await auth.protect();
+    const { sessionClaims } = await auth();
+    if (sessionClaims === null) {
+        return { success: false };
+    }
     console.log(`deleteDocument: ${roomId}`);
-
     try {
-        // delete the document reference itself
-        await adminDb.collection("documents").doc(roomId).delete();
+        // validate that the session user is the owner of current room
+        const isOwner = await db
+            .select({ something: usersToDocuments.userId })
+            .from(usersToDocuments)
+            .where(
+                and(
+                    eq(usersToDocuments.userId, sessionClaims.sub),
+                    eq(usersToDocuments.documentId, roomId),
+                    eq(usersToDocuments.role, "owner")
+                )
+            );
+        if (isOwner.length === 0) {
+            // User is unauthenticated
+            return { success: false };
+        }
 
-        const query = await adminDb
-            .collectionGroup("rooms")
-            .where("roomId", "==", roomId)
-            .get();
-        const batch = adminDb.batch();
-        // delete the room reference in the user's collection for every user in the room
-        query.forEach((doc) => batch.delete(doc.ref));
-
-        await batch.commit();
-
-        await liveblocks.deleteRoom(roomId);
+        // delete the document inside a transaction
+        await db.transaction(async (tx) => {
+            await tx.delete(documents).where(eq(documents.id, roomId));
+            try {
+                await liveblocks.deleteRoom(roomId);
+            } catch (e) {
+                console.error(e);
+                tx.rollback();
+            }
+            // is this better than not using a transaction? maybe not
+        });
 
         return { success: true };
     } catch (err) {
