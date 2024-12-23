@@ -15,6 +15,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { env } from "@/env/client";
+import { stripAllTags } from "@/lib/utils";
 
 import { YJSDoc } from "./editor";
 import {
@@ -52,14 +53,15 @@ export default function TranslateDocument({ doc }: TranslateDocumentProps) {
     const handleAskQuestion = () => {
         startTransition(async () => {
             const documentData = doc.get("document-store").toJSON();
-
+            const strippedDoc = stripAllTags(documentData);
+            console.log(strippedDoc);
             const res = await fetch(
                 `${env.NEXT_PUBLIC_BASE_URL}/translateDocument`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        documentData,
+                        documentData: strippedDoc,
                         targetLang: language,
                     }),
                 }
@@ -67,7 +69,7 @@ export default function TranslateDocument({ doc }: TranslateDocumentProps) {
 
             if (res.ok) {
                 const { translated_text } = await res.json();
-
+                console.log(translated_text);
                 setSummary(translated_text);
                 toast.success("Translated Summary successfully!");
             }
@@ -102,13 +104,13 @@ export default function TranslateDocument({ doc }: TranslateDocumentProps) {
                                 GPT {isPending ? "is thinking..." : "Says:"}
                             </p>
                         </div>
-                        <p>
+                        <div>
                             {isPending ? (
                                 "Thinking..."
                             ) : (
                                 <Markdown>{summary}</Markdown>
                             )}
-                        </p>
+                        </div>
                     </div>
                 )}
 
