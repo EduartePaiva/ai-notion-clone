@@ -11,5 +11,6 @@
 [x] update title buttons
 [x] - delete doc button
 [x] - invite doc button
+[_] - implement authentication in cloudflare
 
-stopped at: 4:16
+stopped at: 4:22

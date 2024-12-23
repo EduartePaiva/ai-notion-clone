@@ -15,6 +15,7 @@ import * as Y from "yjs";
 import { Button } from "@/components/ui/button";
 import { stringToColor } from "@/lib/string-to-color";
 
+import ChatToDocument from "./chat-to-document";
 import TranslateDocument from "./translate-document";
 
 export type YJSDoc = Y.Doc;
@@ -82,6 +83,7 @@ export default function Editor() {
                 {/* Translate Document AI*/}
                 <TranslateDocument doc={doc} />
                 {/* Chat To Document AI */}
+                <ChatToDocument doc={doc} />
 
                 {/* Dark Mode */}
                 <Button
