@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useTransition } from "react";
 
 import { useAuth } from "@clerk/nextjs";
@@ -38,28 +36,31 @@ export default function ChatToDocument({ doc }: ChatToDocumentProps) {
         setQuestion(inputQuestion);
         startTransition(async () => {
             const documentData = doc.get("document-store").toJSON();
+            try {
+                const res = await fetch(
+                    `${env.NEXT_PUBLIC_BASE_URL}/chatToDocument`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${await getToken()}`,
+                        },
+                        body: JSON.stringify({
+                            documentData,
+                            question: inputQuestion,
+                        }),
+                    }
+                );
 
-            const res = await fetch(
-                `${env.NEXT_PUBLIC_BASE_URL}/chatToDocument`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${await getToken()}`,
-                    },
-                    body: JSON.stringify({
-                        documentData,
-                        question: inputQuestion,
-                    }),
+                if (res.ok) {
+                    const { message } = await res.json();
+                    setInputQuestion("");
+                    setSummary(message);
+                } else {
+                    toast.error("Error while asking the question!");
                 }
-            );
-
-            if (res.ok) {
-                const { message } = await res.json();
-                setInputQuestion("");
-                setSummary(message);
-            } else {
-                toast.error("Error while asking the question!");
+            } catch (e) {
+                console.error(e);
             }
         });
     };
@@ -85,14 +86,14 @@ export default function ChatToDocument({ doc }: ChatToDocumentProps) {
                     <div className="flex max-h-96 flex-col items-start gap-2 overflow-y-scroll bg-gray-100 p-5">
                         <div className="flex">
                             <BotIcon className="w-10 flex-shrink-0" />
-                            <p className="font-bold">
+                            <div className="font-bold">
                                 GPT{" "}
                                 {isPending ? (
                                     "is Thinking..."
                                 ) : (
                                     <Markdown>{summary}</Markdown>
                                 )}
-                            </p>
+                            </div>
                         </div>
                     </div>
                 )}
