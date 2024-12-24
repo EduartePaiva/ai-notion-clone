@@ -1,5 +1,6 @@
 import { useState, useTransition } from "react";
 
+import { useAuth } from "@clerk/nextjs";
 import { BotIcon, LanguagesIcon } from "lucide-react";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
@@ -49,29 +50,38 @@ export default function TranslateDocument({ doc }: TranslateDocumentProps) {
     const [summary, setSummary] = useState("");
     const [question] = useState("");
     const [isPending, startTransition] = useTransition();
+    const auth = useAuth();
 
     const handleAskQuestion = () => {
         startTransition(async () => {
             const documentData = doc.get("document-store").toJSON();
             const strippedDoc = stripAllTags(documentData);
             console.log(strippedDoc);
-            const res = await fetch(
-                `${env.NEXT_PUBLIC_BASE_URL}/translateDocument`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        documentData: strippedDoc,
-                        targetLang: language,
-                    }),
-                }
-            );
+            try {
+                const res = await fetch(
+                    `${env.NEXT_PUBLIC_BASE_URL}/translateDocument`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${await auth.getToken()}`,
+                        },
+                        body: JSON.stringify({
+                            documentData: strippedDoc,
+                            targetLang: language,
+                        }),
+                        mode: "cors",
+                    }
+                );
 
-            if (res.ok) {
-                const { translated_text } = await res.json();
-                console.log(translated_text);
-                setSummary(translated_text);
-                toast.success("Translated Summary successfully!");
+                if (res.ok) {
+                    const { translated_text } = await res.json();
+                    console.log(translated_text);
+                    setSummary(translated_text);
+                    toast.success("Translated Summary successfully!");
+                }
+            } catch (e) {
+                console.log(e);
             }
         });
     };

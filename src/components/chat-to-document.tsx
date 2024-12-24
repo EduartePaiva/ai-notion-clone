@@ -15,6 +15,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { env } from "@/env/client";
+import { stripAllTags } from "@/lib/utils";
 
 import { YJSDoc } from "./editor";
 import { Button } from "./ui/button";
@@ -36,6 +37,7 @@ export default function ChatToDocument({ doc }: ChatToDocumentProps) {
         setQuestion(inputQuestion);
         startTransition(async () => {
             const documentData = doc.get("document-store").toJSON();
+            const strippedData = stripAllTags(documentData);
             try {
                 const res = await fetch(
                     `${env.NEXT_PUBLIC_BASE_URL}/chatToDocument`,
@@ -47,7 +49,7 @@ export default function ChatToDocument({ doc }: ChatToDocumentProps) {
                         },
                         body: JSON.stringify({
                             documentData,
-                            question: inputQuestion,
+                            question: strippedData,
                         }),
                     }
                 );
