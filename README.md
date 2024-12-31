@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Notion Clone
 
-## Getting Started
+Ai Notion Clone is a project that integrate a lot of technologies and capabilities together. It range from Open AI integration to realtime document sharing, authentication and translation.
 
-First, run the development server:
+![image](./readme_assets/document_img.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+## Table of Contents
+
+- [Features](#features)
+- [How It Works](#how-it-works)
+- [Installation](#installation)
+- [Tech Stack](#tech-stack)
+- [Contributing](#contributing)
+- [Repositories](#project-repositories)
+- [License](#license)
+
+## Features
+
+- Translation
+- Chat to Document with GPT
+- Invite people to work with your document using an email
+- Realtime document leveraging LiveBlocks and yjs
+- Authentication
+- Light and Dark mode
+
+## How It Works
+
+This project works by integrating LiveBlocks, Postgres Database, User Authentication, Cloudflare Workers, Open API together
+
+LiveBlocks is responsible for the document itself, it provides the realtime document and a super nice UX, for each document a uuid created by the application is assigned, so the application can talk with liveBlocks and authenticate the user
+
+Postgres is responsible for saving the users and the relation between users and a document. There are two types of users for a document, a "owner" and a "editor", the editor can edit the document and chat normally, while the owner can edit, change the title name, remove and invite a editor and delete the document.
+
+User Authentication was made using Clerk, All server actions and routes are protected by clerk and the Cloudflare Worker that is deployed separately, authenticate by the user JWT token.
+
+## Installation
+
+To use it locally, first you'll need to setup the environment variables, they can be found on the env folder, after that for the AI capability you'll need to setup the cloudflare worker too that can be found in this [repository](https://github.com/EduartePaiva/ai-notion-clone-cloudflare-workers)
+
+After everything in place
+
+```console
+docker compose up
+pnpm install
+pnpm db:migrate
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+On the cloudflare worker
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```console
+pnpm install
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+- Nextjs15
+- React
+- LiveBlocks
+- Open AI
+- Clerk
+- Cloudflare Workers
+- Postgresql
+- DrizzleORM
+- TailwindCSS
 
-To learn more about Next.js, take a look at the following resources:
+## Contributing
 
--   [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
--   [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Contributions are welcome! To get started:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Fork any of the project repositories.
+2. Create a new branch for your feature or bug fix.
+3. Submit a pull request with a detailed description of your changes.
 
-## Deploy on Vercel
+## Project repositories
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Client/Next.js server, it's this current repository.
+- Cloudflare Worker: https://github.com/EduartePaiva/ai-notion-clone-cloudflare-workers
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
