@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { createNewDocumentAction } from "@/actions/actions";
 
@@ -27,8 +28,11 @@ export default function NewDocumentButton() {
                 tanstackClient.invalidateQueries({
                     queryKey: ["documents_from_user"],
                 });
+            } else {
+                toast.info(
+                    "You need to be logged in to be able to create a document"
+                );
             }
-            // TODO: handle error state
         });
     };
 
