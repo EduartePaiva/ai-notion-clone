@@ -64,6 +64,7 @@ pnpm dev
 - Postgresql
 - DrizzleORM
 - TailwindCSS
+- React Query
 
 ## Contributing
 
